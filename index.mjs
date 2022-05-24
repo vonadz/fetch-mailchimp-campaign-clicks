@@ -32,18 +32,35 @@ const getDesiredListId = async (allLists) => {
 	}
 };
 
+const askAboutUsingList = async () => {
+	const answer = await rl.question('Do you want to get all campaigns, regardless of list? (y/n)\n');
+	if (answer === 'y' || answer === 'n') {
+		return answer;
+	} else {
+		console.log(`Looks like your answer wasn't y or n. Please try again.`);
+		return askAboutUsingList();
+	}
+};
+
+
 
 
 
 (async() => {
 
 	try {
-	console.log('Getting all lists.');
-	const allLists = await client.lists.getAllLists();
-	console.log('Retrieved these lists: ', allLists.lists);
-	const desiredListId = await getDesiredListId(allLists.lists);
-	console.log(`Getting all campaigns for list id ${desiredListId} (limited to 1000)`);
-  const allCampaigns = await client.campaigns.list({list_id: desiredListId, count: 1000});	
+		let allCampaigns = { campaigns: [] };
+		const useList = await askAboutUsingList();	
+		if (useList === 'y') {
+			allCampaigns = await await client.campaigns.list({ count: 1000 });	
+		} else {
+			console.log('Getting all lists.');
+			const allLists = await client.lists.getAllLists();
+			console.log('Retrieved these lists: ', allLists.lists);
+			const desiredListId = await getDesiredListId(allLists.lists);
+			console.log(`Getting all campaigns for list id ${desiredListId} (limited to 1000)`);
+			allCampaigns = await client.campaigns.list({list_id: desiredListId, count: 1000});	
+		}
 		console.log(`Fetched ${allCampaigns.campaigns.length} campaigns.`);
 		console.log('Fetching URL clicks for each campaign.');
 		let count = 0;
